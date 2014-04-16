@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>News LIST</title>
+        <link href="//netdna.bootstrapcdn.com/bootstrap/3.0.3/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+    <h3>Hello its News list</h3><br>
+    
+        <div>
+<?php echo View::make('Link'); ?>
+    </div>
+
+    
+    <div class="container">
+
+    <?php  
+        $news = News::paginate(3);
+    ?>
+    
+    
+</div>
+    
+    
+    <div class="container">
+            @foreach (array_chunk($news->all(),3) as $items)
+            <div class="row">
+                @foreach($items as $item)
+                <article class="col-md-5">
+                    <table border="3px" width="800px" bgcolor="#E6E6FA" align="canter">
+                        <tr><td colspan="2" align="center"><a href="http://test1.com/one-news/{{$item->id}}" >Read more this news</a></td></tr> 
+                        <tr><td>News ID</td><td>{{$item->id}}</td></tr> 
+                        <tr><td>News rubric ID</td><td>{{$item->rubric_id}}</td></tr> 
+                        <tr><td>News titled</td><td>{{$item->title}}</td></tr> 
+                        <tr><td>News description's</td><td>{{$item->description}}</td></tr> 
+                        <tr><td>News author</td><td>{{$item->author}}</td></tr> 
+                    </table>
+                </article>
+                @endforeach
+            </div>
+            @endforeach
+        {{$news->links()}}
+            
+    </div>
+    
+    
+    
+    
+</body>
+</html>
+
