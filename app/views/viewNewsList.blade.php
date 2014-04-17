@@ -30,6 +30,7 @@
                 <article class="col-md-5">
                     <table border="3px" width="800px" bgcolor="#E6E6FA" align="canter">
                         <tr><td colspan="2" align="center"><a href="http://test1.com/one-news/{{$item->id}}" >Read more this news</a></td></tr> 
+                        <tr><td colspan="2" align="center"><a href="http://test1.com/change-news/{{$item->id}}" >Change this news</a></td></tr> 
                         <tr><td>News ID</td><td>{{$item->id}}</td></tr> 
                         <tr><td>News rubric ID</td><td>{{$item->rubric_id}}</td></tr> 
                         <tr><td>News titled</td><td>{{$item->title}}</td></tr> 
