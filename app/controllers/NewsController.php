@@ -100,6 +100,61 @@ class NewsController extends BaseController {
             
             echo View::make('deleteNews');
         }
-    
         
+        public static function changeNews($news)
+	{
+                $news1 = array(
+                            'id'=>$news->id,
+                            'rubric_id'=>$news->rubric_id,
+                            'title'=>$news->title,
+                            'description'=>$news->description,
+                            'author'=>$news->author,
+                            'tag'=>$news->tag,
+                            'review'=>$news->review,
+                        );
+            echo View::make('formChangeNames',$news1);
+	}
+
+        public function  addChangeNews(){
+        
+         $validator = Validator::make(
+                array(
+                  'title' => Input::get('title'),
+                  'rubric_id' => Input::get('rubric_id'),
+                  'tag' => Input::get('tag'),
+                  'author' => Input::get('author'),
+                  'description' => Input::get('description'),
+                  'review' => Input::get('review')
+                ),
+                array(
+                  'title' => 'required',
+                  'rubric_id' => 'required',
+                  'tag' => 'required',
+                  'author' => 'required',
+                  'description' => 'required',
+                  'review' => 'required'
+                )
+            );
+            if($validator->fails()){
+                return Redirect::to('change-news')->withErrors($validator);
+            }else{
+            
+         
+            
+                    $tag = Input::get('tag');
+                    $review = Input::get('review');
+                    $id =  Input::get('id');
+                                        
+                    $news = News::find($id);
+                    $news->title = Input::get('title');
+                    $news->rubric_id = Input::get('rubric_id');
+                    $news->author = Input::get('author');
+                    $news->description = Input::get('description');
+                    $news->save();
+                    $news->saveTag($tag);
+                    $news->saveReview($review);
+                return View::make('viewSuccessChangeNews');
+            }
+    }
+       
 }
