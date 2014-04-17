@@ -62,3 +62,9 @@ Route::get('/', function()
 	return View::make('hello');
 });
 
+Route::model('news', 'News');
+
+Route::get('change-news/{news}', function(News $news){
+    return NewsController::changeNews($news);
+});
+Route::post('change-news', 'NewsController@addChangeNews');
