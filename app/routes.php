@@ -24,16 +24,10 @@ Route::get('rubric', 'RubricController@viewRubric');
 Route::get('tag', 'TagController@viewTag');
 
 Route::model('news', 'News');
-
-Route::get('one-news/{news}', function(News $news){
-    return NewsController::getViewsOneNews($news);
-});
+Route::get('one-news/{news}', 'NewsController@getViewsOneNews');
 
 Route::model('review', 'Review');
-
-Route::get('one-review/{review}', function(Review $review){
-    return ReviewController::getViewsOneReview($review);
-});
+Route::get('one-review/{review}', 'ReviewController@getViewsOneReview');
 
 Route::post('add-news', 'NewsController@addNews');
 Route::get('add-news', 'NewsController@formAddNews');
@@ -57,14 +51,23 @@ Route::post('delete-review', 'ReviewController@deleteReview');
 //----------------------------------------------------------------------
 //----------------------------------------------------------------------
 
-Route::get('/', function()
-{
-	return View::make('hello');
-});
+Route::get('/', 'HomeController@showWelcome');
 
 Route::model('news', 'News');
-
-Route::get('change-news/{news}', function(News $news){
-    return NewsController::changeNews($news);
-});
+Route::get('change-news/{news}', "NewsController@changeNews");
 Route::post('change-news', 'NewsController@addChangeNews');
+
+
+
+Route::get('ajax-change-news/{news}', 'AjaxController@changeNews');
+//Route::post('ajax-change/{news}', 'AjaxController@ajaxAddChangeNews');
+
+Route::post('ajax-change-news/ajax-change', array('as' => 'ajax-change', 
+                                                  'ajax-change-news' => function () { echo AjaxController::ajaxAddChangeNews();}
+                                                  ));
+
+Route::get('ajax-add-news', 'AjaxController@ajaxAddNews');
+Route::post('ajax-add-news', "AjaxController@ajaxAdd");
+
+
+
