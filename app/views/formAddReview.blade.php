@@ -40,7 +40,7 @@
             echo '<div class="error">'.$error_title.'</div>';
         }    
         ?>
-        <div>{{Title: ".Form::text('title');}}</div>
+        <div>{{"Title: ".Form::text('title');}}</div>
         <?php
         if(!empty($error_author)){
             echo '<div class="error">'.$error_author.'</div>';
