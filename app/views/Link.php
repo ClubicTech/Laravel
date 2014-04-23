@@ -9,3 +9,4 @@
                 <a href="http://test1.com/add-tag" > Add Tag </a><br>
                 <a href="http://test1.com/delete-news" > Delete News</a><br>
                 <a href="http://test1.com/delete-review" > Delete Review</a><br>
+                <a href="http://test1.com/ajax-add-news" > ajax-add-news</a><br>
