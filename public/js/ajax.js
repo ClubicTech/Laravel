@@ -1,4 +1,12 @@
- function SendRequest(){
+/* 
+ * To change this license header, choose License Headers in Project Properties.
+ * To change this template file, choose Tools | Templates
+ * and open the template in the editor.
+ */
+
+
+ function SendRequest(url){
+        
         
             var send_flag = true;
             var title = document.getElementById('title').value;
@@ -22,6 +30,13 @@
               send_flag = false;
             }
 //--------------------------------------------------------------------------------------------------
+            var rubric_id = document.getElementById('rubric_id').value;
+            if(rubric_id.replace(/\s+/g, '').length) {
+            } else {
+              document.getElementById('error_rubric_id').innerHTML = "Please enter rubric_id";
+              send_flag = false;
+            }
+//--------------------------------------------------------------------------------------------------
             var review = document.getElementById('review').value;
             if(review.replace(/\s+/g, '').length) {
             } else {
@@ -36,16 +51,17 @@
               send_flag = false;
             }
             var msg   = $('#ajax_form').serialize();
+            
            if(send_flag){
                 $.ajax({
-                    url:'ajax-change',
+                    url: url,
                     type:'POST',
                     data: msg,
                     beforeSend:function () {
                         document.getElementById('loader').innerHTML="send.....";
                     },
                     success: function(res) {
-                        document.getElementById('rezult').innerHTML=res;
+                        document.getElementById('loader').innerHTML=res;
                     }
                 });
             }
