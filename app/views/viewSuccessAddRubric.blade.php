@@ -1,16 +1,4 @@
-<!doctype html>
-<html lang="en">
-<head>
-	<meta charset="UTF-8">
-	<title>Success add Rubric</title>
-</head>
-<body>
-    	<div class="welcome">
-            
-            <div>
-            </div>
-            	<h1>You new Rubric add successes!!</h1>
-{{View::make('Link');}}
-	</div>
-</body>
-</html>
+@extends('layouts.master')
+    @section('content')
+    	<h1>You new RUBRIC add successes!!</h1>
+    @endsection 

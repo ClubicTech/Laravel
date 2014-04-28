@@ -1,28 +1,11 @@
-<!doctype html>
-<html lang="en">
-<head>
-	<meta charset="UTF-8">
-	<title>News LIST</title>
+@extends('layouts.master')
+    @section('header')
+        <title>delete Review</title>
         <link href="//netdna.bootstrapcdn.com/bootstrap/3.0.3/css/bootstrap.min.css" rel="stylesheet">
-</head>
-<body>
+    @endsection    
+    @section('content')
     <h3>Hello its News list</h3><br>
-    
-        <div>
-<?php echo View::make('Link'); ?>
-    </div>
-
-    
-    <div class="container">
-
-    <?php  
-        $news = News::paginate(3);
-    ?>
-    
-    
-</div>
-    
-    
+    <?php  $news = News::paginate(3); ?>
     <div class="container">
             @foreach (array_chunk($news->all(),3) as $items)
             <div class="row">
@@ -42,13 +25,6 @@
                 @endforeach
             </div>
             @endforeach
-        {{$news->links()}}
-            
+    {{$news->links()}}
     </div>
-    
-    
-    
-    
-</body>
-</html>
-
+    @endsection
