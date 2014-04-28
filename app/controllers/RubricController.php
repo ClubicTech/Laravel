@@ -22,7 +22,12 @@ class RubricController extends BaseController {
 
     	public function formAddRubric()
         {
-            echo View::make('formAddRubric');
+            $rubric =  Rubric::all();
+            foreach ($rubric as $rubrics){
+                $select_array[$rubrics->id] = $rubrics->name; 
+            }
+            $info = array( 'select_array' => $select_array );
+            return View::make('formAddRubric',$info);
 	}
 
     	public function addRubric()

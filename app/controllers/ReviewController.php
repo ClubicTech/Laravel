@@ -14,36 +14,51 @@ class ReviewController extends BaseController {
         |
 	*/
 
-    public function viewReview()
+        public function viewReview()
         {
-            echo View::make('viewReviewList');
-	}
+            return View::make('viewReviewList');
+        }
 
-        //ReviewController::getViewsOneReview($review);
-    public static function getViewsOneReview($review)  
+        public static function getViewsOneReview($review)  
         {
                 
-                $review1 = array(
+            $review1 = array(
                             'id'=>$review->id,
                             'rubric_id'=>$review->rubric_id,
                             'title'=>$review->title,
                             'description'=>$review->description,
                             'author'=>$review->author
                         );
-                
-                //print_r("<br>______________________________________<br>");
-		echo View::make('viewOneReview',$review1);//->with($products);
+            echo View::make('viewOneReview',$review1);
 	}
         
-        public function formAddReview(){
-            
-            return View::make('formAddReview');
-             
+        public function formAddReview()
+        {
+            $rubric =  Rubric::all();
+            foreach ($rubric as $rubrics){
+                    $select_array[$rubrics->id] = $rubrics->name; 
+            }
+
+            $new = News::all();  
+            foreach ($new as $news){
+                    $select_news[$news->id] = $news->title; 
+            }
+
+            $tag = Tag::all();  
+            foreach ($tag as $tags){
+                    $select_tag[$tags->id] = $tags->tag_text; 
+            }
+            $info = array( 'select_array' => $select_array,
+                           'select_news' => $select_news,
+                           'select_tag' => $select_tag 
+                         );
+            return View::make('formAddReview',$info);     
         }
         
-        public function addReview(){
+        public function addReview()
+        {
             
-         $validator = Validator::make(
+            $validator = Validator::make(
                 array(
                   'title' => Input::get('title'),
                   'rubric_id' => Input::get('rubric_id'),
@@ -75,8 +90,8 @@ class ReviewController extends BaseController {
                 $review->save();
                 $review->saveTag($tag);
                 $review->saveNews($news);
-                return View::make('viewSuccessAddReview');                
                 
+                return View::make('viewSuccessAddReview');
             }
         }
         
@@ -86,19 +101,11 @@ class ReviewController extends BaseController {
             echo View::make('listDeleteReview');
 	}
         
-        public function deleteReview(){
-            $delete_review = Input::all();
-            
-              foreach($delete_review as $k=>$v){
-                   if($k== 'delete_review'){
-                       foreach($v as $k2=>$v1){
-                            $review_mass_delete[] = $v1;    
-                       }                       
-                   }
-              }
-              
-            foreach($review_mass_delete as $v){
-                $ObDeleteNews = Review::find($v);
+        public function deleteReview()
+        {
+            $delete_review = Input::get('delete_review');
+            foreach($delete_review as $key_mass => $valueIdReview){
+                $ObDeleteNews = Review::find($valueIdReview);
                 $ObDeleteNews->delete();
             }
             

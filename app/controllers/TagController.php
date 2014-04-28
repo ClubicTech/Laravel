@@ -16,13 +16,24 @@ class TagController extends BaseController {
       
 	public function formAddTag()
         {
-            echo View::make('formAddTag');
+            $new = News::all();      
+            foreach ($new as $news){
+                $select_news[$news->id] = $news->title; 
+            }
+
+            $review = Review::all();  
+            foreach ($review as $reviews){
+                $select_review[$reviews->id] = $reviews->title; 
+            }
+            $info = array( 'select_news' => $select_news,
+                           'select_review' => $select_review 
+                         );
+            return View::make('formAddTag',$info);
 	}
 
 	public function addTag()
-        {
-                        
-         $validator = Validator::make(
+        {               
+            $validator = Validator::make(
                 array(
                   'tag_text' => Input::get('tag_text'),
                   'review' => Input::get('review'),
@@ -39,15 +50,12 @@ class TagController extends BaseController {
             }else{
                 $review = Input::get('review');
                 $news = Input::get('news');
-                
                 $tag = new Tag();
                 $tag->tag_text = Input::get('tag_text');
-                
                 $tag->save();
                 $tag->saveReview($review);
                 $tag->saveNews($news);
-                return View::make('viewSuccessAddTag');                
-                
+                return View::make('viewSuccessAddTag'); 
             }
         }
 

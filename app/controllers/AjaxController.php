@@ -1,5 +1,4 @@
 <?php
-
 class AjaxController extends BaseController {
 
 	/*
@@ -17,7 +16,25 @@ class AjaxController extends BaseController {
     
 	public function ajaxAddNews()
 	{
-		echo View::make('ajaxAddNews');
+                $rubric =  Rubric::all(); 
+                foreach ($rubric as $rubrics){
+                        $select_array[$rubrics->id] = $rubrics->name; 
+                }
+
+                $review = Review::all(); 
+                foreach ($review as $reviews){
+                        $select_review[$reviews->id] = $reviews->title; 
+                }
+
+                $tag = Tag::all();  
+                foreach ($tag as $tags){
+                        $select_tag[$tags->id] = $tags->tag_text; 
+                }
+                $inform = array( 'select_array' => $select_array, 
+                                 'select_review' => $select_review,
+                                 'select_tag' => $select_tag
+                                );
+		return View::make('ajaxAddNews',$inform);
 	}
 	
         public function ajaxAdd()
@@ -26,33 +43,60 @@ class AjaxController extends BaseController {
                     $tag = Input::get('tag');
                     $review = Input::get('review');
                     $id =  Input::get('id');
-                                        
                     $news = new News();
                     $news->title = Input::get('title');
                     $news->rubric_id = Input::get('rubric_id');
                     $news->author = Input::get('author');
                     $news->description = Input::get('description');
-                    $news->save();
-                    $news->saveTag($tag);
-                    $news->saveReview($review);
-                echo "You new News success add in BD!";  
-            }else{
+                    
+                    //$transaction = DB::transaction(function($news){
+                        $news->save();
+                        $news->saveTag($tag);
+                        $news->saveReview($review);
+                    //});
+                 echo "You new News success add in BD!"; 
+                 
             }
  	}
         
         
-        public static function changeNews($news)
+        public function changeNews($news)
 	{
-		        $news1 = array(
-                            'id'=>$news->id,
-                            'rubric_id'=>$news->rubric_id,
-                            'title'=>$news->title,
-                            'description'=>$news->description,
-                            'author'=>$news->author,
-                            'tag'=>$news->tag,  
-                            'review'=>$news->review,
-                        );
-            echo View::make('ajaxFormChangeNames',$news1);
+            
+            foreach ($news->review as $item){
+                $select_review_value[] = $item->id;
+                $select_review_value[] = $item->title;
+            }
+            
+            foreach($news->tag as $item){
+                $select_tag_value[] = $item->id;
+                $select_tag_value[] = $item->tag_text;
+            }
+    
+            $rubric =  Rubric::all();      
+            foreach ($rubric as $rubrics){
+                    $select_array[$rubrics->id] = $rubrics->name; 
+            }
+            
+            $review = Review::all();  
+            foreach ($review as $reviews){
+                    $select_review[$reviews->id] = $reviews->title; 
+            }
+            
+            $tag = Tag::all();  
+            foreach ($tag as $tags){
+                    $select_tag[$tags->id] = $tags->tag_text; 
+            }
+            
+            $news1 = array(
+                            'news' => $news,
+                            'select_tag_value' => $select_tag_value,
+                            'select_tag' => $select_tag,
+                            'select_review_value' => $select_review_value,
+                            'select_review' => $select_review,
+                            'select_array' => $select_array,
+                           );
+            return View::make('ajaxFormChangeNames',$news1);
 	}
         
         
@@ -62,9 +106,7 @@ class AjaxController extends BaseController {
                     $tag = Input::get('tag');
                     $review = Input::get('review');
                     $id =  Input::get('id');
-                                        
                     $news = News::find($id);
-                    
                     $news->title = Input::get('title');
                     $news->rubric_id = Input::get('rubric_id');
                     $news->author = Input::get('author');
@@ -72,9 +114,8 @@ class AjaxController extends BaseController {
                     $news->save();
                     $news->saveTag($tag);
                     $news->saveReview($review);
-                echo "You change add!!";
-            }else{}
-            
+                return "You change add!!";
+            }
         }
 
 }
