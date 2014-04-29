@@ -18,7 +18,7 @@ class RequestAPIController extends BaseController {
         //$url = 'http://test1.com/api.test1/news';
         $url = Config::get('curl.allnews');
 
-        $data = $this->getCurlGET($url);
+        $data = $this->_getCurl($url,"GET");
 
 
         if ($data['success']) {
@@ -61,7 +61,7 @@ class RequestAPIController extends BaseController {
         } else {
             $url = Config::get('curl.search') . $text_search;
 
-            $data = $this->getCurlGET($url);
+            $data = $this->_getCurl($url,"GET");
 
             if ($data['success']) {
                 foreach ($data['data'] as $data_value) {
@@ -104,7 +104,7 @@ class RequestAPIController extends BaseController {
 
             $url = Config::get('curl.tagsearch') . $text_tag;
 
-            $data = $this->getCurlGET($url);
+            $data = $this->_getCurl($url,"GET");
 
             if ($data['success']) {
                 $dates = array();
@@ -165,7 +165,7 @@ class RequestAPIController extends BaseController {
     public function getOneAPINews($id) {
 
         $url = Config::get('curl.onenews') . $id;
-        $data = $this->getCurlGET($url);
+        $data = $this->_getCurl($url,"GET");
 
         if ($data['success']) {
             foreach ($data['data'] as $value) {
@@ -206,7 +206,7 @@ class RequestAPIController extends BaseController {
     public function getCheangeAPINews($id, $success = false, $message = NULL) {
 
         $url = Config::get('curl.onenews') . $id;
-        $data = $this->getCurlGET($url);
+        $data = $this->_getCurl($url,"GET");
 
         if ($data['success']) {
             foreach ($data['data'] as $value) {
@@ -256,7 +256,7 @@ class RequestAPIController extends BaseController {
                 "description" => $description
             );
 
-            $result = $this->getCurlPost($url, $data);
+            $result = $this->_getCurl($url,"POST", $data);
 
             if ($result['success']) {
                 foreach ($result['data'] as $value) {
@@ -314,7 +314,7 @@ class RequestAPIController extends BaseController {
                 "description" => $description
             );
 
-            $result = $this->getCurlPost($url, $data);
+            $result = $this->_getCurl($url,"POST", $data);
 
             if ($result['success']) {
 
@@ -336,31 +336,33 @@ class RequestAPIController extends BaseController {
         }
     }
 
-    public function getCurlPOST($url, $data) {
-
-        $data_string = json_encode($data);
+    protected function _getCurl($url,$method, $data=NULL) {
+        
         $ch = curl_init($url);
-        curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "POST");
-        curl_setopt($ch, CURLOPT_POSTFIELDS, $data_string);
+        curl_setopt($ch, CURLOPT_CUSTOMREQUEST, $method);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($ch, CURLOPT_HTTPHEADER, array(
-            'Content-Type: application/json',
-            'Content-Length: ' . strlen($data_string))
-        );
-
-        if (curl_exec($ch) === false) {
+        
+        if($method == "POST"){
+            $data_string = json_encode($data);            
+            curl_setopt($ch, CURLOPT_POSTFIELDS, $data_string);
+            curl_setopt($ch, CURLOPT_HTTPHEADER, array(
+                'Content-Type: application/json',
+                'Content-Length: ' . strlen($data_string))
+            );
+        }
+        $curl_exec = curl_exec($ch);
+        if ($curl_exec === false) {
             $result = array(
                 'success' => false,
                 'message' => curl_error($ch)
             );
-            curl_close($ch);
         } else {
-            json_decode(curl_exec($ch));
+            $json_decode = json_decode($curl_exec);
             switch (json_last_error()) {
                 case JSON_ERROR_NONE:
                     $result = array(
                         'success' => true,
-                        'data' => json_decode(curl_exec($ch))
+                        'data' => $json_decode
                     );
                     break;
                 case JSON_ERROR_DEPTH:
@@ -405,77 +407,5 @@ class RequestAPIController extends BaseController {
         return $result;
     }
 
-    
- /**
- * Removes "deny" restrictions from the ACL
- *
- * @param  Zend_Acl_Role_Interface|string|array     $roles
- * @param  Zend_Acl_Resource_Interface|string|array $resources
- * @param  string|array                             $privileges
- * @uses   Zend_Acl::setRule()
- * @return Zend_Acl Provides a fluent interface
- */
-    
-    public function getCurlGET($url) {
-
-        $ch = curl_init($url);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-
-        if (curl_exec($ch) === false) {
-            $data = array(
-                'success' => false,
-                'message' => curl_error($ch)
-            );
-            curl_close($ch);
-        } else {
-            json_decode(curl_exec($ch));
-            switch (json_last_error()) {
-                case JSON_ERROR_NONE:
-                    $data = array(
-                        'success' => true,
-                        'data' => json_decode(curl_exec($ch))
-                    );
-                    break;
-                case JSON_ERROR_DEPTH:
-                    $data = array(
-                        'success' => false,
-                        'message' => 'Достигнута максимальная глубина стека'
-                    );
-                    break;
-                case JSON_ERROR_STATE_MISMATCH:
-                    $data = array(
-                        'success' => false,
-                        'message' => 'Некорректные разряды или не совпадение режимов'
-                    );
-                    break;
-                case JSON_ERROR_CTRL_CHAR:
-                    $data = array(
-                        'success' => false,
-                        'message' => 'Некорректный управляющий символ'
-                    );
-                    break;
-                case JSON_ERROR_SYNTAX:
-                    $data = array(
-                        'success' => false,
-                        'message' => 'Синтаксическая ошибка, не корректный JSON'
-                    );
-                    break;
-                case JSON_ERROR_UTF8:
-                    $data = array(
-                        'success' => false,
-                        'message' => 'Некорректные символы UTF-8, возможно неверная кодировка'
-                    );
-                    break;
-                default:
-                    $data = array(
-                        'success' => false,
-                        'message' => 'Неизвестная ошибка'
-                    );
-                    break;
-            }
-        }
-        curl_close($ch);
-        return $data;
-    }
 
 }
