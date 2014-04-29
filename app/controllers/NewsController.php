@@ -17,14 +17,6 @@ class NewsController extends BaseController {
         return View::make('viewNewsList');
     }
 
-//------------------------------------------------------------------------------------
-//------------------------------------------------------------------------------------
-//------------------------------------------------------------------------------------
-//------------------------------------------------------------------------------------
-//------------------------------------------------------------------------------------
-//------------------------------------------------------------------------------------
-//------------------------------------------------------------------------------------
-//------------------------------------------------------------------------------------        
     public function getJSONNews() {
         $news = News::all();
         foreach ($news as $new) {
@@ -40,8 +32,7 @@ class NewsController extends BaseController {
         return Response::json($data);
     }
 
-//------------------------------------------------------------------------------------
-//------------------------------------------------------------------------------------        
+        
     public function getOneJSONNews($id) {
 
         try {
@@ -71,8 +62,6 @@ class NewsController extends BaseController {
         }
     }
 
-//------------------------------------------------------------------------------------
-//------------------------------------------------------------------------------------
     public function deteteJSONNews($id) {
         $news = News::find($id);
         if (!empty($news)) {
@@ -100,16 +89,18 @@ class NewsController extends BaseController {
         }
     }
 
-//------------------------------------------------------------------------------------
-//------------------------------------------------------------------------------------        
-    public function changeJSONNews($id) {
+  public function changeJSONNews($id) {
 
         $title = Input::json('title');
+        $author = Input::json('author');
+        $description = Input::json('description');
 
 
-        if (!empty($title)) {
+        if (!empty($title) && !empty($author) && !empty($description)) {
             $news = News::find($id);
             $news->title = $title;
+            $news->author = $author;
+            $news->description = $description;
             $temp = $news->save();
             if ($temp) {
                 $data[] = array(
@@ -135,8 +126,6 @@ class NewsController extends BaseController {
         }
     }
 
-//------------------------------------------------------------------------------------
-//------------------------------------------------------------------------------------        
     public function searchJSONNews($name) {
 
         $sqlstr = "SELECT * FROM news WHERE title LIKE '%" . $name . "%' OR description LIKE '%" . $name . "%' ;";
@@ -164,9 +153,7 @@ class NewsController extends BaseController {
         }
     }
 
-//------------------------------------------------------------------------------------
-//------------------------------------------------------------------------------------        
-    public function searchJSONNewsTag($tag) {
+   public function searchJSONNewsTag($tag) {
         if (!empty($tag)) {
             $sqlstr = "SELECT id FROM tag WHERE tag_text LIKE '%" . $tag . "%';";
             $results = DB::select($sqlstr);
@@ -237,36 +224,29 @@ class NewsController extends BaseController {
         } else {
             $resultsMass[] = array(
                 'success' => false,
-                'news' => 'You send not corect invormation!!!',
+                'message' => 'You send not corect invormation!!!',
             );
             return Response::json($resultsMass);
         }
     }
 
-//------------------------------------------------------------------------------------
-//------------------------------------------------------------------------------------        
 
     public function createJSONNews() {
 
         $title = Input::json('title');
-        $rubric_id = Input::json('rubric_id');
+        //$rubric_id = Input::json('rubric_id');
         $author = Input::json('author');
         $description = Input::json('description');
-
-//        $title = Input::get('title');
-//        $rubric_id = Input::get('rubric_id');
-//        $author = Input::get('author');
-//        $description = Input::get('description');
 
         $validator = Validator::make(
                         array(
                     'title' => $title,
-                    'rubric_id' => $rubric_id,
+                    //'rubric_id' => $rubric_id,
                     'author' => $author,
                     'description' => $description,
                         ), array(
                     'title' => 'required',
-                    'rubric_id' => 'required',
+                   // 'rubric_id' => 'required',
                     'author' => 'required',
                     'description' => 'required'
                         )
@@ -282,7 +262,7 @@ class NewsController extends BaseController {
 
             $news = new News();
             $news->title = $title;
-            $news->rubric_id = $rubric_id;
+            //$news->rubric_id = $rubric_id;
             $news->author = $author;
             $news->description = $description;
             try {
@@ -304,15 +284,6 @@ class NewsController extends BaseController {
         }
     }
 
-//------------------------------------------------------------------------------------
-//------------------------------------------------------------------------------------
-//------------------------------------------------------------------------------------
-//------------------------------------------------------------------------------------
-//------------------------------------------------------------------------------------
-//------------------------------------------------------------------------------------
-//------------------------------------------------------------------------------------
-//------------------------------------------------------------------------------------
-//------------------------------------------------------------------------------------
     public function formAddNews() {
 
         $rubric = Rubric::all();
