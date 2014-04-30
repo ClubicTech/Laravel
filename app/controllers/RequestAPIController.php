@@ -2,24 +2,32 @@
 
 class RequestAPIController extends BaseController {
     /*
-      |--------------------------------------------------------------------------
+      |-------------------------------------------------------------------------
       | RequestAPIController
-      |--------------------------------------------------------------------------
+      |-------------------------------------------------------------------------
       |
-      |
+      |Controller is designed to work with the external API to search for news 
+      |on the ID, the text in the title and description, search for news and 
+      |reviews on the tag, call the search result display otbrazhenie all the 
+      |news and every bit of news for her ID, change kokretno news on her ID
+      | and adding news removal news on ID,
       |
       |
       |
       |
       |
      */
-
-    public function getAllAPINews() {
-        //$url = 'http://test1.com/api.test1/news';
+    
+    /**
+     * Method is used to display all the news
+     * 
+     * @return view
+     * returns a list of news or reference error api
+     */
+    public function showAllNews() {
+        
         $url = Config::get('curl.allnews');
-
-        $data = $this->_getCurl($url,"GET");
-
+        $data = $this->_makeAPIRequest($url,"GET");
 
         if ($data['success']) {
             $news = array(
@@ -34,19 +42,47 @@ class RequestAPIController extends BaseController {
         }
     }
 
-    public function getSearchAPINews() {
+    /**
+     * method is intended for display on a form 
+     * to search for news on the text in the 
+     * title and description
+     * 
+     * @return view
+     */
+    public function formSearchNews() {
         
         return View::make('getSearchAPINews');
         
     }
+    
+    
+    /**
+     * 
+     * method is intended for display
+     *  on a form to search for news
+     *  and reviews by tag
+     * 
+     * 
+     * @return view     
+     */
 
-    public function getSearchAPINewsAndReview() {
+    public function formSearchNewsAndReview() {
         
         return View::make('getSearchAPINewsAndReview');
         
     }
 
-    public function getShowSearchAPINews() {
+    
+    /**
+     * Method shows a list of news that 
+     * were found on the text in the title 
+     * or description, or the message that 
+     * the news was not found
+     * 
+     * 
+     * @return view return result search news
+     */
+    public function showSearchNews() {
         
         $text_search = Input::get('text_search');
         $validator = Validator::make(
@@ -61,7 +97,7 @@ class RequestAPIController extends BaseController {
         } else {
             $url = Config::get('curl.search') . $text_search;
 
-            $data = $this->_getCurl($url,"GET");
+            $data = $this->_makeAPIRequest($url,"GET");
 
             if ($data['success']) {
                 foreach ($data['data'] as $data_value) {
@@ -88,7 +124,14 @@ class RequestAPIController extends BaseController {
         }
     }
 
-    public function getShowSearchAPINewsAndReview() {
+    /**
+     * Method shows a list of news and reviews 
+     * that have been found on the tag or a message
+     *  that the news or reviews were found
+     * 
+     * @return view display the desired news and reviews
+     */
+    public function showSearchNewsAndReview() {
         
         $text_tag = Input::get('text_tag');
         $validator = Validator::make(
@@ -104,7 +147,7 @@ class RequestAPIController extends BaseController {
 
             $url = Config::get('curl.tagsearch') . $text_tag;
 
-            $data = $this->_getCurl($url,"GET");
+            $data = $this->_makeAPIRequest($url,"GET");
 
             if ($data['success']) {
                 $dates = array();
@@ -161,11 +204,17 @@ class RequestAPIController extends BaseController {
             }
         }
     }
-
-    public function getOneAPINews($id) {
+    
+    /**
+     * This method show displey one news
+     * 
+     * @param Integer $id  it ID displays news
+     * @return view
+     */
+    public function displayOneNews($id) {
 
         $url = Config::get('curl.onenews') . $id;
-        $data = $this->_getCurl($url,"GET");
+        $data = $this->_makeAPIRequest($url,"GET");
 
         if ($data['success']) {
             foreach ($data['data'] as $value) {
@@ -185,7 +234,15 @@ class RequestAPIController extends BaseController {
         }
     }
 
-    public function getDeleteAPINews($id) {
+    /**
+     * This method is intended to remove the news.
+     * Input parameter has ID, news and method returns the
+     * result of successful or not successful removal news
+     * 
+     * @param Integer $id ID removable news
+     * @return View returns the result of the removal news
+     */
+    public function removalNews($id) {
         
         $url = Config::get('curl.delete') . $id;
         $ch = curl_init($url);
@@ -202,11 +259,21 @@ class RequestAPIController extends BaseController {
         }
         return View::make('getResultDelete', $news);
     }
-
-    public function getCheangeAPINews($id, $success = false, $message = NULL) {
+    
+    
+    /**
+     * Method returns the form with initial parameters news you want to change
+     * 
+     * @param Integer $id it ID news you want to change
+     * @param boolean $success reports on the success of changes
+     * @param String $message reports made ​​any changes or what error occurred while trying to change news
+     * @return view Returns form changes with the corresponding message
+     */
+    
+    public function formMakeChanges($id, $success = false, $message = NULL) {
 
         $url = Config::get('curl.onenews') . $id;
-        $data = $this->_getCurl($url,"GET");
+        $data = $this->_makeAPIRequest($url,"GET");
 
         if ($data['success']) {
             foreach ($data['data'] as $value) {
@@ -227,8 +294,15 @@ class RequestAPIController extends BaseController {
             return View::make('getErrorApi', $news);
         }
     }
-
-    public function getCheangeAPINewsADD($id) {
+    
+    
+    /**
+     * This method saves the news on its id and returns the result display (error or success)
+     * 
+     * @param Integer $id is id the news you want to save changes
+     * @return type
+     */
+    public function savingChangesNews($id) {
         
         $title = Input::get('title');
         $author = Input::get('author');
@@ -256,7 +330,7 @@ class RequestAPIController extends BaseController {
                 "description" => $description
             );
 
-            $result = $this->_getCurl($url,"POST", $data);
+            $result = $this->_makeAPIRequest($url,"POST", $data);
 
             if ($result['success']) {
                 foreach ($result['data'] as $value) {
@@ -265,9 +339,9 @@ class RequestAPIController extends BaseController {
                 }
 
                 if ($success) {
-                    return $this->getCheangeAPINews($id, $success);
+                    return $this->formMakeChanges($id, $success);
                 } else {
-                    return $this->getCheangeAPINews($id, $success, $message);
+                    return $this->formMakeChanges($id, $success, $message);
                 }
             } else {
                 $news = array(
@@ -278,15 +352,30 @@ class RequestAPIController extends BaseController {
         }
     }
 
-    public function getCreateAPINewsForm($success = false, $message = NULL) {
+    /**
+     * Method of displaying the form of creating news
+     * 
+     * @param boolean $success parametr success add news
+     * @param string $message message for false success add news
+     * @return view
+     */
+    
+    
+    public function formCreatingNews($success = false, $message = NULL) {
         $news = array(
             'success' => $success,
             'message' => $message
         );
         return View::make('getCreateAPINewsForm', $news);
     }
-
-    public function getCreateAPINewsADD() {
+    
+    /**
+     * method of adding news api if successful news is added, otherwise it returns the error display
+     * 
+     * @return View 
+     */
+    
+    public function addingCreatedNews() {
 
         $title = Input::get('title');
         $author = Input::get('author');
@@ -314,7 +403,7 @@ class RequestAPIController extends BaseController {
                 "description" => $description
             );
 
-            $result = $this->_getCurl($url,"POST", $data);
+            $result = $this->_makeAPIRequest($url,"POST", $data);
 
             if ($result['success']) {
 
@@ -323,9 +412,9 @@ class RequestAPIController extends BaseController {
                     $message = $value->message;
                 }
                 if ($success) {
-                    return $this->getCreateAPINewsForm($success);
+                    return $this->formCreatingNews($success);
                 } else {
-                    return $this->getCreateAPINewsForm($success, $message);
+                    return $this->formCreatingNews($success, $message);
                 }
             } else {
                 $news = array(
@@ -335,8 +424,22 @@ class RequestAPIController extends BaseController {
             }
         }
     }
-
-    protected function _getCurl($url,$method, $data=NULL) {
+                
+    
+    /**
+     * 
+     * This method to access the api for return specific information
+     * 
+     * @param string $url resource circulation
+     * @param string $method set the method of transmission POST or GET
+     * @param array $data an array of parameters to pass to API 
+     * @return array result array from request to API   
+     * 
+     *      
+     */
+    
+    
+    protected function _makeAPIRequest($url,$method, $data=NULL) {
         
         $ch = curl_init($url);
         curl_setopt($ch, CURLOPT_CUSTOMREQUEST, $method);
