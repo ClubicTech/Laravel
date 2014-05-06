@@ -134,9 +134,6 @@ class AuthController extends BaseController {
             );
 
             if (Auth::attempt($userdata, $remember_me)) {
-                //$username = Auth::user()->username;
-                //Session::put('username', $username);
-                //Cookie::put('username', $username, 60);
                 return Redirect::to('/');
             } else {
                 return Redirect::to('login');
