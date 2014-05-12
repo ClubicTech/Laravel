@@ -41,8 +41,11 @@ class UserAPIController extends BaseController {
             } else {
 
                 
+                
+                $password2 =  md5($password)."TanGo21";
+                $safepassword = md5($password2);
                 $user = new APIUser();
-                $user->password = $password;   
+                $user->password = $safepassword;   
                 $user->username = $username;
                 $user->email = $email;
                 
@@ -93,7 +96,12 @@ class UserAPIController extends BaseController {
             return Response::json($data);
         } else {
              
-            $sqlstr = "SELECT `id` FROM apiusers WHERE `username`='" . $username . "' AND `password`='" . $password . "';";
+            
+            
+            $password2 =  md5($password)."TanGo21";
+            $safepassword = md5($password2);
+                
+            $sqlstr = "SELECT `id` FROM apiusers WHERE `username`='" . $username . "' AND `password`='" . $safepassword . "';";
 
             $results = DB::select($sqlstr);
             
@@ -102,7 +110,14 @@ class UserAPIController extends BaseController {
 
             $user->hash = Hash::make($this->generateCode(8));
             $user->time = time();
-
+            ///////////////////////////////////////////////////////////////////////////////////////////
+            ///////////////////////////////////////////////////////////////////////////////////////////
+            ///////////////////////////////////////////////////////////////////////////////////////////
+            //$Hash = md5($tempStr);
+            ///////////////////////////////////////////////////////////////////////////////////////////
+            ///////////////////////////////////////////////////////////////////////////////////////////
+            ///////////////////////////////////////////////////////////////////////////////////////////
+            
             try {
                 DB::transaction(function() use ($user) {
                     $user->save();
