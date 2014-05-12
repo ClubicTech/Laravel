@@ -101,7 +101,7 @@ class AuthController extends BaseController {
     }
 
     /**
-     * Method set log in uset if it exists
+     * Method set log in user if it exists
      * 
      * @return \Illuminate\View\View
      */
