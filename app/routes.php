@@ -11,10 +11,6 @@
   |
  */
 
-//----------------------------------------------------------------------
-//----------------------------------------------------------------------
-
-
 Route::get('news', 'NewsController@viewNews');
 
 Route::get('review', 'ReviewController@viewReview');
@@ -32,26 +28,15 @@ Route::get('one-review/{review}', 'ReviewController@getViewsOneReview');
 Route::post('add-news', 'NewsController@addNews');
 Route::get('add-news', 'NewsController@formAddNews');
 
-
 Route::get('/', 'HomeController@showWelcome');
 
-//--------------------------------------------------------------------------------------------
 Route::get('api.test1/news', 'NewsController@getJSONNews');
 
 Route::get('api.test1/news/{id}', 'NewsController@getOneJSONNews');
 
-
 Route::get('api.test1/news/search/{name}', 'NewsController@searchJSONNews');
 
 Route::get('api.test1/news/tag/search/{tag}', 'NewsController@searchJSONNewsTag');
-
-
-// -------------------------   -------------------------   ---------------------
-// -------------------------   -------------------------   ---------------------
-
-
-
-
 
 Route::get('login', 'AuthController@getLogin');
 Route::post('login', 'AuthController@setLogin');
@@ -108,20 +93,82 @@ Route::group(array('before' => 'auth'), function () {
     Route::get('change-news/{news}', "NewsController@changeNews");
     Route::post('change-news', 'NewsController@addChangeNews');
 
-
-
     Route::get('ajax-change-news/{news}', 'AjaxController@changeNews');
 //Route::post('ajax-change/{news}', 'AjaxController@ajaxAddChangeNews');
 
     Route::post('ajax-change-news/ajax-change', array('as' => 'ajax-change',
         'ajax-change-news' => function () {
-    echo AjaxController::ajaxAddChangeNews();
-}
+                                        echo AjaxController::ajaxAddChangeNews();
+                               }
     ));
 
     Route::get('ajax-add-news', 'AjaxController@ajaxAddNews');
     Route::post('ajax-add-news', "AjaxController@ajaxAdd");
 });
+
+
+
+
+// ---|||---|||---|||---|||---|||---|||---|||---|||---|||---|||---|||---|||
+// ---|||---|||---|||---|||---|||---|||---|||---|||---|||---|||---|||---|||
+// ---|||---|||---|||---|||---|||---|||---|||---|||---|||---|||---|||---|||
+// ---|||---|||---|||---|||---|||---|||---|||---|||---|||---|||---|||---|||
+
+Route::post('api.test1.api-login', 'UserAPIController@login');
+
+Route::post('api.test1.api-registration', 'UserAPIController@registration');
+
+Route::post('api.test1.api/news', 'APINewsController@allNews');
+
+Route::post('api.test1.api/one-news', 'APINewsController@oneNews');
+
+Route::post('api.test1.api/news/change', 'APINewsController@changeNews');
+
+Route::post('api.test1.api/news/delete', 'APINewsController@deteteNews');
+
+Route::post('api.test1.api/news/create', 'APINewsController@createNews');
+
+Route::post('api.test1.api/news/search', 'APINewsController@searchNews');
+
+Route::post('api.test1.api/news/tag-search', 'APINewsController@tagSearchNews');
+
+
+
+
+
+
+
+
+Route::get('api.test1.api/news/search/{name}', 'APINewsController@searchJSONNews');
+
+Route::get('api.test1.api/news/tag/search/{tag}', 'APINewsController@searchJSONNewsTag');
+
+// ---|||---|||---|||---|||---|||---|||---|||---|||---|||---|||---|||---|||
+// ---|||---|||---|||---|||---|||---|||---|||---|||---|||---|||---|||---|||
+// ---|||---|||---|||---|||---|||---|||---|||---|||---|||---|||---|||---|||
+// ---|||---|||---|||---|||---|||---|||---|||---|||---|||---|||---|||---|||
+Route::get('api-login', 'APIAuthComtroller@apiloginForm');
+Route::post('api-login', 'APIAuthComtroller@login');
+Route::get('api-all-news', 'APIAuthComtroller@showAllNews');
+Route::model('news', 'News');
+Route::get('api-one-news/{news}', 'APIAuthComtroller@displayOneNews');
+Route::get('api-change-news/{news}', 'APIAuthComtroller@getChangeNewsForm');
+Route::post('api-change-news/{news}', 'APIAuthComtroller@savingChangesNews');
+Route::get('api-delete-news/{news}', 'APIAuthComtroller@removalNews');
+Route::get('api-create-news', 'APIAuthComtroller@createNewsForm');
+Route::post('api-create-news', 'APIAuthComtroller@addingCreatedNews');
+Route::get('api-search-news', 'APIAuthComtroller@formSearchNews');
+Route::post('api-search-news', 'APIAuthComtroller@showSerchNews');
+
+Route::get('api-tag-search-news', 'APIAuthComtroller@formTagSearchNews');
+Route::post('api-tag-search-news', 'APIAuthComtroller@showTagSerchNews');
+
+
+
+Route::get('api-registration', 'APIAuthComtroller@apiregistrationForm');
+Route::post('api-registration', 'APIAuthComtroller@registration');
+Route::get('api-logout', 'APIAuthComtroller@logout');
+
 
 
 
