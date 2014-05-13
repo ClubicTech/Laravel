@@ -21,14 +21,24 @@ class APIAuthComtroller extends BaseController {
     }
 
     public function logout() {
-        //Cookie::clearResolvedInstances();
-        //Cookie::forget('userID');
-        //Cookie::forget('userHASH');
-        //Cookie::unqueue('userID');
-        //Cookie::unqueue('userHASH');
-        Cookie::queue('userHASH', 0);
-        Cookie::queue('userID', 0);
+        $hash = Cookie::get('userHASH');
+        $id = Cookie::get('userID');
+        if (empty($hash)) {
+            $hash = 0;
+        }
 
+        if (empty($id)) {
+            $id = 0;
+        }
+
+        $data = array(
+            'hash' => $hash,
+            'id' => $id
+        );
+  
+        $result = $this->_makeAPIRequest(Config::get('usercurl.logout'), "POST", $data);
+        Cookie::queue('userHASH', NULL);
+        Cookie::queue('userID', NULL);
         return Redirect::to('api-login');
     }
 
@@ -63,8 +73,8 @@ class APIAuthComtroller extends BaseController {
                 "username" => $username,
                 "email" => $email
             );
-            $url = 'http://test1.com/api.test1.api-registration';
-            $result = $this->_makeAPIRequest($url, "POST", $data);
+
+            $result = $this->_makeAPIRequest(Config::get('usercurl.registration'), "POST", $data);
 
             if ($result['success']) {
                 if ($result['data']->success) {
@@ -114,9 +124,9 @@ class APIAuthComtroller extends BaseController {
                 'username' => $username,
                 'password' => $password
             );
-            $url = 'http://test1.com/api.test1.api-login';
+            //$url = 'http://test1.com/api.test1.api-login';
 
-            $result = $this->_makeAPIRequest($url, "POST", $data);
+            $result = $this->_makeAPIRequest(Config::get('usercurl.login'), "POST", $data);
             if ($result['success']) {
                 if ($result['data']->success) {
                     if ($remember) {
@@ -124,10 +134,10 @@ class APIAuthComtroller extends BaseController {
                         Cookie::forever('userID', $result['data']->id);
                         return Redirect::to('/');
                     } else {
-                        //Cookie::make('userHASH', $result['data']->hash, 10);
-                        //Cookie::make('userID', $result['data']->id, 10);
-                        Cookie::queue('userHASH', $result['data']->hash);
-                        Cookie::queue('userID', $result['data']->id);
+                        //Cookie::make('userHASH', $result['data']->hash,10);
+                        //Cookie::make('userID', $result['data']->id,10);
+                        Cookie::queue('userHASH', $result['data']->hash, 10, '/');
+                        Cookie::queue('userID', $result['data']->id, 10, '/');
                         return Redirect::to('/');
                     }
                 } else {
@@ -238,8 +248,6 @@ class APIAuthComtroller extends BaseController {
      * returns a list of news or reference error api
      */
     public function showAllNews() {
-
-        $url = 'http://test1.com/api.test1.api/news';
         $hash = Cookie::get('userHASH');
         $id = Cookie::get('userID');
         if (empty($hash)) {
@@ -254,26 +262,27 @@ class APIAuthComtroller extends BaseController {
             'hash' => $hash,
             'id' => $id
         );
-        $data = $this->_makeAPIRequest($url, "POST", $news);
+         
+        $userin = $this->_makeAPIRequest(Config::get('usercurl.islogged'), "POST", $news);
+        if ($userin['data']->success) {
 
-        if ($data['success']) {
-            if ($data['data']->success) {
+            $data = $this->_makeAPIRequest(Config::get('curl.allnews'), "GET");
+
+            if ($data['success']) {
                 $news = array(
-                    'news' => $data['data']->data
+                    'news' => $data['data']
                 );
                 return View::make('APIallNews', $news);
             } else {
                 $news = array(
-                    "error" => $data['data']->message
+                    "error" => $data['message']
                 );
                 return View::make('getErrorApi', $news);
             }
-        } else {
-            $news = array(
-                "error" => $data['message']
-            );
-            return View::make('getErrorApi', $news);
         }
+        
+        
+        
     }
 
     /**
@@ -300,11 +309,14 @@ class APIAuthComtroller extends BaseController {
             'id' => $id,
             'news_id' => $news_id->id,
         );
-        $data = $this->_makeAPIRequest($url, "POST", $news);
 
-        if ($data['success']) {
-            if ($data['data']->success) {
-                foreach ($data['data']->data as $value) {
+        $userin = $this->_makeAPIRequest(Config::get('usercurl.islogged'), "POST", $news);
+        if ($userin['data']->success) {
+            $url = Config::get('curl.onenews') . $id;
+            $data = $this->_makeAPIRequest($url, "GET");
+
+            if ($data['success']) {
+                foreach ($data['data'] as $value) {
                     $news = array(
                         "id" => $value->id,
                         "title" => $value->title,
@@ -315,15 +327,15 @@ class APIAuthComtroller extends BaseController {
                 return View::make('getOneAPINews', $news);
             } else {
                 $news = array(
-                    "error" => $data['data']->message
+                    "error" => $data['message']
                 );
                 return View::make('getErrorApi', $news);
             }
         } else {
-            $news = array(
-                "error" => $data['message']
+            $message = array(
+                "error" => 'You mast log in!!'
             );
-            return View::make('getErrorApi', $news);
+            return Redirect::to('api-login')->withErrors($message);
         }
     }
 
@@ -335,7 +347,7 @@ class APIAuthComtroller extends BaseController {
      */
     public function getChangeNewsForm($news_id) {
 
-        $url = 'http://test1.com/api.test1.api/one-news';
+        //$url = 'http://test1.com/api.test1.api/one-news';
         $hash = Cookie::get('userHASH');
         $id = Cookie::get('userID');
         if (empty($hash)) {
@@ -349,13 +361,14 @@ class APIAuthComtroller extends BaseController {
         $news = array(
             'hash' => $hash,
             'id' => $id,
-            'news_id' => $news_id->id,
         );
-        $data = $this->_makeAPIRequest($url, "POST", $news);
-        //print_r($data);
-        if ($data['success']) {
-            if ($data['data']->success) {
-                foreach ($data['data']->data as $value) {
+        $userin = $this->_makeAPIRequest(Config::get('usercurl.islogged'), "POST", $news);
+        if ($userin['data']->success) {
+
+            $url = Config::get('curl.onenews') . $id;
+            $data = $this->_makeAPIRequest($url, "GET");
+            if ($data['success']) {
+                foreach ($data['data'] as $value) {
                     $news = array(
                         "id" => $value->id,
                         "title" => $value->title,
@@ -366,16 +379,15 @@ class APIAuthComtroller extends BaseController {
                 return View::make('APIchangeNews', $news);
             } else {
                 $news = array(
-                    "error" => $data['data']->message
+                    "error" => $data['message']
                 );
                 return View::make('APIchangeNews', $news);
             }
         } else {
-            $news = array(
-                "error" => $data['message']
+            $message = array(
+                "error" => 'You mast log in!!'
             );
-
-            //return View::make('APIchangeNews');
+            return Redirect::to('api-login')->withErrors($message);
         }
     }
 
@@ -386,7 +398,7 @@ class APIAuthComtroller extends BaseController {
      * @return \Illuminate\View\View 
      */
     public function savingChangesNews($id) {
-
+        //return $id->id;
         $title = Input::get('title');
         $author = Input::get('author');
         $description = Input::get('description');
@@ -403,10 +415,11 @@ class APIAuthComtroller extends BaseController {
                         )
         );
         if ($validator->fails()) {
-            $url = 'api-change-news/' . $id;
+            $url = 'change-news-api/' . $id->id;
             return Redirect::to($url)->withErrors($validator);
         } else {
-            $url = 'http://test1.com/api.test1.api/news/change';
+
+
             $hash = Cookie::get('userHASH');
             $user_id = Cookie::get('userID');
             if (empty($hash)) {
@@ -416,30 +429,46 @@ class APIAuthComtroller extends BaseController {
             if (empty($user_id)) {
                 $user_id = 0;
             }
-            $data = array(
-                "title" => $title,
-                "author" => $author,
-                'description' => $description,
+
+            $news = array(
                 'hash' => $hash,
-                'user_id' => $user_id,
-                'news_id' => $id->id,
+                'id' => $user_id,
             );
+            $userin = $this->_makeAPIRequest(Config::get('usercurl.islogged'), "POST", $news);
+            if ($userin['data']->success) {
+                $url = Config::get('curl.change') . $id->id;
+                $data = array(
+                    "title" => $title,
+                    "author" => $author,
+                    "description" => $description
+                );
 
-            $result = $this->_makeAPIRequest($url, "POST", $data);
+                $result = $this->_makeAPIRequest($url, "POST", $data);
 
-            if ($result['success']) {
-                if ($result['data'][0]->success) {
-                    $message = array(
-                        "error" => $result['data'][0]->message
+                if ($result['success']) {
+                    foreach ($result['data'] as $value) {
+                        $success = $value->success;
+                        $message = $value->message;
+                    }
+
+                    $date = array(
+                        "error" => $message
                     );
                     $url = 'api-change-news/' . $id->id;
-                    return Redirect::to($url)->withErrors($message);
+                    return Redirect::to($url)->withErrors($date);
+                } else {
+                    $news = array(
+                        "error" => $data['message']
+                    );
+                    $url = 'api-change-news/' . $id->id;
+                    return Redirect::to($url)->withErrors($news);
                 }
             } else {
-                $message = array(
-                    "error" => $data['message']
+                $date = array(
+                    "error" => "You mast authorisation"
                 );
-                return Redirect::to($url)->withErrors($message);
+                $url = 'api-change-news/' . $id->id;
+                return Redirect::to($url)->withErrors($date);
             }
         }
     }
@@ -452,38 +481,42 @@ class APIAuthComtroller extends BaseController {
      * @param Integer $id ID removable news
      * @return \Illuminate\View\View  returns the result of the removal news
      */
-    public function removalNews($news) {
+    public function removalNews($news1) {
 
-        $url = 'http://test1.com/api.test1.api/news/delete';
         $hash = Cookie::get('userHASH');
-        $user_id = Cookie::get('userID');
+        $id = Cookie::get('userID');
         if (empty($hash)) {
             $hash = 0;
         }
 
-        if (empty($user_id)) {
-            $user_id = 0;
+        if (empty($id)) {
+            $id = 0;
         }
-        $data = array(
+
+        $news = array(
             'hash' => $hash,
-            'user_id' => $user_id,
-            'news_id' => $news->id,
+            'id' => $id,
         );
+        $userin = $this->_makeAPIRequest(Config::get('usercurl.islogged'), "POST", $news);
+        if ($userin['data']->success) {
+            $url = Config::get('curl.delete') . $news1->id;
+            $ch = curl_init($url);
+            curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'DELETE');
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
 
-        $result = $this->_makeAPIRequest($url, "POST", $data);
-
-        if ($result['success']) {
-            if ($result['data'][0]->success) {
+            $result = json_decode(curl_exec($ch));
+            curl_close($ch);
+            foreach ($result as $value) {
                 $news = array(
-                    "success" => false,
-                    "message" => $result['data'][0]->message,
+                    "success" => $value->success,
+                    "message" => $value->message,
                 );
-                return View::make('getResultDelete', $news);
             }
+            return View::make('getResultDelete', $news);
         } else {
             $news = array(
                 "success" => false,
-                "message" => "Some problem",
+                "message" => "You mast authorisation!!",
             );
             return View::make('getResultDelete', $news);
         }
@@ -505,7 +538,6 @@ class APIAuthComtroller extends BaseController {
      * @return \Illuminate\View\View 
      */
     public function addingCreatedNews() {
-
         $title = Input::get('title');
         $author = Input::get('author');
         $description = Input::get('description');
@@ -522,53 +554,57 @@ class APIAuthComtroller extends BaseController {
                         )
         );
         if ($validator->fails()) {
-            $url = 'create-news-api';
-            return Redirect::to($url)->withErrors($validator);
+            return Redirect::to('api-create-news')->withErrors($validator);
         } else {
 
-            $url = 'http://test1.com/api.test1.api/news/create';
             $hash = Cookie::get('userHASH');
-            $user_id = Cookie::get('userID');
+            $id = Cookie::get('userID');
             if (empty($hash)) {
                 $hash = 0;
             }
 
-            if (empty($user_id)) {
-                $user_id = 0;
+            if (empty($id)) {
+                $id = 0;
             }
 
-            $data = array(
-                "title" => $title,
-                "author" => $author,
-                'description' => $description,
+            $news = array(
                 'hash' => $hash,
-                'user_id' => $user_id
+                'id' => $id,
             );
+            $userin = $this->_makeAPIRequest(Config::get('usercurl.islogged'), "POST", $news);
+            if ($userin['data']->success) {
+                $url = Config::get('curl.create');
+                $data = array(
+                    "title" => $title,
+                    "author" => $author,
+                    "description" => $description
+                );
 
-            $result = $this->_makeAPIRequest($url, "POST", $data);
+                $result = $this->_makeAPIRequest($url, "POST", $data);
 
-            print_r($result);
+                if ($result['success']) {
 
+                    foreach ($result['data'] as $value) {
+                        $success = $value->success;
+                        $message = $value->message;
+                    }
 
-
-            if ($result['success']) {
-                if ($result['data'][0]->success) {
-                    $message = array(
-                        "error" => $result['data'][0]->message
+                    $data = array(
+                        'error' => $message
                     );
-                    return Redirect::to('http://test1.com/api-create-news')->withErrors($message);
+                    return Redirect::to('api-create-news')->withErrors($data);
                 } else {
-                    $message = array(
-                        "error" => $result['data'][0]->message
+
+                    $data = array(
+                        'error' => $data['message']
                     );
-                    return Redirect::to('http://test1.com/api-create-news')->withErrors($message);
+                    return Redirect::to('api-create-news')->withErrors($data);
                 }
             } else {
-
-                $message = array(
-                    "error" => "Some problem"
+                $data = array(
+                    'error' => 'You mast authorisation'
                 );
-                return Redirect::to('http://test1.com/api-create-news')->withErrors($message);
+                return Redirect::to('api-create-news')->withErrors($data);
             }
         }
     }
@@ -602,6 +638,7 @@ class APIAuthComtroller extends BaseController {
      * @return \Illuminate\View\View
      */
     public function showSerchNews() {
+
         $text_search = Input::get('text_search');
         $validator = Validator::make(
                         array(
@@ -615,43 +652,53 @@ class APIAuthComtroller extends BaseController {
             return Redirect::to('api-search-news')->withErrors($validator);
         } else {
 
-            $url = 'http://test1.com/api.test1.api/news/search';
+
             $hash = Cookie::get('userHASH');
-            $user_id = Cookie::get('userID');
+            $id = Cookie::get('userID');
             if (empty($hash)) {
                 $hash = 0;
             }
 
-            if (empty($user_id)) {
-                $user_id = 0;
+            if (empty($id)) {
+                $id = 0;
             }
 
-            $data = array(
-                "text" => $text_search,
+            $news = array(
                 'hash' => $hash,
-                'user_id' => $user_id
+                'id' => $id,
             );
-            $result = $this->_makeAPIRequest($url, "POST", $data);
-
-            if ($result['success']) {
-                if ($result['data'][0]->success) {
-                    $news = array(
-                        "success" => true,
-                        "news" => $result['data'][0]->data
-                    );
-                    return View::make('getShowSearchAPINews', $news);
+            $userin = $this->_makeAPIRequest(Config::get('usercurl.islogged'), "POST", $news);
+            if ($userin['data']->success) {
+                $url = Config::get('curl.search') . $text_search;
+                $data = $this->_makeAPIRequest($url, "GET");
+                if ($data['success']) {
+                    foreach ($data['data'] as $data_value) {
+                        if ($data_value->success) {
+                            $news = array(
+                                "success" => true,
+                                "news" => $data_value->data
+                            );
+                            return View::make('getShowSearchAPINews', $news);
+                        } else {
+                            $news = array(
+                                "success" => false,
+                                "message" => $data_value->message
+                            );
+                            return View::make('getShowSearchAPINews', $news);
+                        }
+                    }
                 } else {
                     $news = array(
-                        "error" => $result['data'][0]->message
+                        "error" => $data['message']
                     );
-                    return Redirect::to('api-search-news')->withErrors($news);
+                    return View::make('getErrorApi', $news);
                 }
             } else {
-
                 $news = array(
-                    "error" => $result['message']
+                    "success" => false,
+                    "message" => "You mast LOG IN!!!"
                 );
-                return Redirect::to('api-search-news')->withErrors($news);
+                return View::make('getShowSearchAPINews', $news);
             }
         }
     }
@@ -675,65 +722,81 @@ class APIAuthComtroller extends BaseController {
         if ($validator->fails()) {
             return Redirect::to('api-tag-search-news')->withErrors($validator);
         } else {
-
-            $url = 'http://test1.com/api.test1.api/news/tag-search';
             $hash = Cookie::get('userHASH');
-            $user_id = Cookie::get('userID');
+            $id = Cookie::get('userID');
             if (empty($hash)) {
                 $hash = 0;
             }
 
-            if (empty($user_id)) {
-                $user_id = 0;
+            if (empty($id)) {
+                $id = 0;
             }
 
-            $data = array(
-                "tag" => $tag,
+            $news = array(
                 'hash' => $hash,
-                'user_id' => $user_id
+                'id' => $id,
             );
-            $result = $this->_makeAPIRequest($url, "POST", $data);
+            $userin = $this->_makeAPIRequest(Config::get('usercurl.islogged'), "POST", $news);
+            if ($userin['data']->success) {
+                $url = Config::get('curl.tagsearch') . $tag;
 
-            if ($result['success']) {
-                if ($result['data'][0]->success) {
-                    $news = $result['data'][0]->news;
-                    $review = $result['data'][0]->review;
+                $data = $this->_makeAPIRequest($url, "GET");
 
-                    if (!empty($news) && !empty($review)) {
-                        $dates = array(
-                            "success" => true,
-                            "success_news" => true,
-                            "success_review" => true,
-                            "news" => $news,
-                            "review" => $review
-                        );
+                if ($data['success']) {
+                    $dates = array();
+                    foreach ($data['data'] as $data1) {
+                        $success = $data1->success;
+                        if ($success && !empty($success)) {
+                            $news;
+                            $review;
+                            if (isset($data1->news)) {
+                                $news = $data1->news;
+                            }
+                            if (isset($data1->review)) {
+                                $review = $data1->review;
+                            }
+                            if (!empty($news) && !empty($review)) {
+                                $dates = array(
+                                    "success" => true,
+                                    "success_news" => true,
+                                    "success_review" => true,
+                                    "news" => $news,
+                                    "review" => $review
+                                );
+                            }
+                            if (empty($news) && !empty($review)) {
+                                $dates = array(
+                                    "success" => true,
+                                    "success_news" => false,
+                                    "success_review" => true,
+                                    "review" => $review
+                                );
+                            }
+                            if (!empty($news) && empty($review)) {
+                                $dates = array(
+                                    "success" => true,
+                                    "success_news" => true,
+                                    "success_review" => false,
+                                    "news" => $news
+                                );
+                            }
+                            return View::make('getShowSearchAPINewsAndReview', $dates);
+                        } else {
+                            $dates = array(
+                                "error" => "You request no return result"
+                            );
+                            return Redirect::to('api-tag-search-news')->withErrors($dates);
+                        }
                     }
-                    if (empty($news) && !empty($review)) {
-                        $dates = array(
-                            "success" => true,
-                            "success_news" => false,
-                            "success_review" => true,
-                            "review" => $review
-                        );
-                    }
-                    if (!empty($news) && empty($review)) {
-                        $dates = array(
-                            "success" => true,
-                            "success_news" => true,
-                            "success_review" => false,
-                            "news" => $news
-                        );
-                    }
-                    return View::make('getShowSearchAPINewsAndReview', $dates);
                 } else {
                     $news = array(
-                        "error" => $result['data'][0]->message
+                        "error" => $result['message']
                     );
                     return Redirect::to('api-tag-search-news')->withErrors($news);
                 }
             } else {
                 $news = array(
-                    "error" => $result['message']
+                    "error" => 'You mast LOG IN!!'
                 );
                 return Redirect::to('api-tag-search-news')->withErrors($news);
             }
