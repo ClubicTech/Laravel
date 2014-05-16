@@ -1,6 +1,7 @@
 <?php
 
-use Illuminate\Http\Response;
+//use Illuminate\Http\Response;
+//use Illuminate\Cookie;
 
 class ProjactTest extends TestCase {
 
@@ -52,8 +53,8 @@ class ProjactTest extends TestCase {
     public function testGetOneNews() {
 
         $crawler1 = $this->call('GET', 'api.test1/news/6');
-        $this->assertEquals('[{"id":"6","title":"Some news for Football__4","rubric_id":"7","author":"M.Vovk","description":"Some news for Football__4"}]', $crawler1->getContent());
-        //$this->assertTrue($this->client->getResponse()->isOk());
+        $this->assertEquals('[{"success":false,"message":"This news not found!"}]', $crawler1->getContent());
+        $this->assertTrue($this->client->getResponse()->isOk());
     }
 
 }
