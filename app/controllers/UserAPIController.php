@@ -24,14 +24,17 @@ class UserAPIController extends BaseController {
                         )
         );
         if ($validator->fails()) {
+            
             $data = array(
-                'success' => FALSE,
+                'success' => false,
                 'message' => 'You mast filled all fields!!'
             );
             return Response::json($data);
         } else {
-            $sqlstr = "SELECT * FROM apiusers WHERE username='" . $username . "';";
-            $results = DB::select($sqlstr);
+            
+            $results = APIUser::whereUsername($username)->first();
+            
+            
             if (!empty($results)) {
                 $data = array(
                     'success' => FALSE,
@@ -46,20 +49,22 @@ class UserAPIController extends BaseController {
                 $user->password = $safepassword;
                 $user->username = $username;
                 $user->email = $email;
-
+                $user->hash = 0;
+                $user->time = 0;
+                
                 try {
                     DB::transaction(function() use ($user) {
                         $user->save();
                     });
                 } catch (\PDOException $e) {
                     $data = array(
-                        'success' => FALSE,
-                        'message' => 'Some transaction problem!!'
+                        'success' => false,
+                        'message' => 'Some data base problem'//$e->getMessage()
                     );
                     return Response::json($data);
                 }
                 $data = array(
-                    'success' => TRUE,
+                    'success' => true,
                     'data' => 'You ragistration success!'
                 );
                 return Response::json($data);
@@ -93,40 +98,50 @@ class UserAPIController extends BaseController {
             );
             return Response::json($data);
         } else {
-
-
-
+            
+            
             $password2 = md5($password) . "TanGo21";
             $safepassword = md5($password2);
+       
+            $user = APIUser::whereUsername($username)->first();
+            if(!empty($user)){
+                
+                if($user->password == $safepassword){
+                    $user->hash = Hash::make($this->generateCode(8));
+                    $user->time = time();
 
-            $sqlstr = "SELECT `id` FROM apiusers WHERE `username`='" . $username . "' AND `password`='" . $safepassword . "';";
-
-            $results = DB::select($sqlstr);
-
-            $user = APIUser::find($results[0]->id);
-
-
-            $user->hash = Hash::make($this->generateCode(8));
-            $user->time = time();
-
-            try {
-                DB::transaction(function() use ($user) {
-                    $user->save();
-                });
-            } catch (\PDOException $e) {
+                    try {
+                        DB::transaction(function() use ($user) {
+                            $user->save();
+                        });
+                    } catch (\PDOException $e) {
+                        $data = array(
+                            'success' => FALSE,
+                            'message' => 'Some transaction problem!!'
+                        );
+                        return Response::json($data);
+                    }
+                    $data = array(
+                        'success' => TRUE,
+                        'id' => $user->id,
+                        'hash' => $user->hash,
+                            //'time' => $user->time
+                    );
+                    return Response::json($data);
+                } else {
+                     $data = array(
+                    'success' => FALSE,
+                    'message' => 'Maybe you entered the wrong password'
+                );
+                return Response::json($data);
+                }
+            } else {
                 $data = array(
                     'success' => FALSE,
-                    'message' => 'Some transaction problem!!'
+                    'message' => 'user with this name does not exist'
                 );
                 return Response::json($data);
             }
-            $data = array(
-                'success' => TRUE,
-                'id' => $user->id,
-                'hash' => $user->hash,
-                    //'time' => $user->time
-            );
-            return Response::json($data);
         }
     }
 
